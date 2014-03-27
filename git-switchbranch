@@ -1,5 +1,26 @@
 #!/bin/bash
 
+# git-switchbranch
+# @author shadowhand https://github.com/shadowhand
+# @license MIT
+#
+# installation:
+# save this file as git-switchbranch somewhere in your $PATH
+# make it executable: chmod +x git-switchbranch
+#
+# optional:
+# alias switchbrach to "sb": git config --global alias.sb switchbranch
+#
+# usage:
+# git switchbranch
+# select the branch you want to move to using numbers
+# press enter
+# ???
+# profit
+#
+# enjoy!
+#
+
 usage() {
 	echo "usage: git switchbranch"
 }
