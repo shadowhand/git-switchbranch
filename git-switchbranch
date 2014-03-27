@@ -1,0 +1,34 @@
+#!/bin/bash
+
+usage() {
+	echo "usage: git switchbranch"
+}
+
+version() {
+    echo "switchbranch v0.0.2"
+}
+
+select_branch() {
+    # Set the prompt string
+    PS3="--> Select a branch? "
+    # first branch is always "master"
+    branches=("master $(git branch | sed -e 's/*//' -e 's/(no branch)//' -e 's/master//')")
+    select selected in $branches; do
+        if [ "$selected" == "quit" -o "$selected" == "q" -o "$selected" == "" ]; then
+            exit 1
+        fi
+        git checkout "$selected"
+        exit 0
+    done
+}
+
+main() {
+    command="$1"
+    shift
+    case $command in
+        "version") version;;
+        *) select_branch "$@";;
+    esac
+}
+
+main "$@"
