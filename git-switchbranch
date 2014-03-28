@@ -10,7 +10,7 @@
 # make it executable: chmod +x git-switchbranch
 #
 # optional:
-# alias switchbranch to "sb" with git config --global alias.sb switchbranch
+# git config --global alias.sb '! git switchbranch'
 #
 # usage:
 # git switchbranch
