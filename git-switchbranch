@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # git-switchbranch
+# @link https://gist.github.com/shadowhand/9813453
 # @author shadowhand https://github.com/shadowhand
 # @license MIT
 #
@@ -9,7 +10,7 @@
 # make it executable: chmod +x git-switchbranch
 #
 # optional:
-# alias switchbrach to "sb": git config --global alias.sb switchbranch
+# alias switchbrach to "sb" with git config --global alias.sb switchbranch
 #
 # usage:
 # git switchbranch
@@ -22,19 +23,70 @@
 #
 
 usage() {
-	echo "usage: git switchbranch"
+	echo "usage: git switchbranch [-a] [-r <remote>]"
 }
 
+# changelog
+# 
+# 0.0.3
+# - update comments, documentation
+# - fix select menu issues when in detached HEAD mode
+# - added new options -a, -r $remote for selecting non-local branches
+#
+# 0.0.2
+# - branch named "master" will always be first in menu
+#
+# 0.0.1
+# - initial release
+#
 version() {
-    echo "switchbranch v0.0.2"
+    echo "switchbranch v0.0.3"
 }
 
-select_branch() {
+_select_branch() {
     # Set the prompt string
     PS3="--> Select a branch? "
-    # first branch is always "master"
-    branches=("master $(git branch | sed -e 's/*//' -e 's/(no branch)//' -e 's/master//')")
-    select selected in $branches; do
+    # First branch is always set to "master", or whatever local branch is first when looking for master
+    # Search all branches, not just local?
+    local branchargs="--list"
+    local remote=""
+    while getopts "r:a" o; do
+        case $o in
+            "a")
+                # select all branches
+                branchargs="$branchargs -a"
+                ;;
+            "r")
+                # show a specific remote
+                branchargs="$branchargs -r"
+                remote="$OPTARG"
+                ;;
+        esac
+    done
+    # branch names, removing detached and no branch warnings, and also trimming whitespace
+    if [[ ! -z $remote ]]; then
+        local branches=($(git branch $branchargs | grep -v -e '\->' -e '\* (detached from .*)' -e '(no branch)' | grep "$remote/" | sed -e 's/*//' -e 's/^[ \t]+//'))
+    else
+        local branches=($(git branch $branchargs | grep -v -e '\->' -e '\* (detached from .*)' -e '(no branch)' | sed -e 's/*//' -e 's/^[ \t]+//'))
+    fi
+    if [[ ! -z $remote ]]; then
+        # remove the remote from the branch name
+        branches=(${branches[@]/$remote\//})
+    fi
+    for (( i=0; i < ${#branches[@]}; i++ )); do
+        # attempt to find a master branch
+        if [[ "${branches[$i]}" == *"master" ]]; then
+            local master="${branches[$i]}"
+            unset branches[$i]
+            break # found one, stop looking
+        fi
+    done
+    if [[ ! -z $master ]]; then
+        # ensure that master branch is placed in front
+        branches=("$master" "${branches[@]}")
+    fi
+    # display the menu!
+    select selected in ${branches[@]}; do
         if [ "$selected" == "quit" -o "$selected" == "q" -o "$selected" == "" ]; then
             exit 1
         fi
@@ -44,11 +96,10 @@ select_branch() {
 }
 
 main() {
-    command="$1"
-    shift
+    local command="$1"
     case $command in
         "version") version;;
-        *) select_branch "$@";;
+        *) _select_branch "$@";;
     esac
 }
 
