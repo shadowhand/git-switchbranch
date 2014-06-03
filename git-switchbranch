@@ -27,6 +27,9 @@ usage() {
 }
 
 # changelog
+#
+# 0.0.4
+# - update prompt
 # 
 # 0.0.3
 # - update comments, documentation
@@ -40,12 +43,10 @@ usage() {
 # - initial release
 #
 version() {
-    echo "switchbranch v0.0.3"
+    echo "switchbranch v0.0.4"
 }
 
 _select_branch() {
-    # Set the prompt string
-    PS3="--> Select a branch? "
     # First branch is always set to "master", or whatever local branch is first when looking for master
     # Search all branches, not just local?
     local branchargs="--list"
@@ -85,7 +86,9 @@ _select_branch() {
         # ensure that master branch is placed in front
         branches=("$master" "${branches[@]}")
     fi
-    # display the menu!
+    # Set the prompt string
+    PS3="--> Switch branch [1-${#branches[@]}] or [q]? "
+    # ask for input!
     select selected in ${branches[@]}; do
         if [ "$selected" == "quit" -o "$selected" == "q" -o "$selected" == "" ]; then
             exit 1
