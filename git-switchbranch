@@ -28,9 +28,12 @@ usage() {
 
 # changelog
 #
+# 0.1.0
+# - use consistent order for "master" and "develop" branches
+#
 # 0.0.4
 # - update prompt
-# 
+#
 # 0.0.3
 # - update comments, documentation
 # - fix select menu issues when in detached HEAD mode
@@ -43,7 +46,7 @@ usage() {
 # - initial release
 #
 version() {
-    echo "switchbranch v0.0.4"
+    echo "switchbranch v0.1.0"
 }
 
 _select_branch() {
@@ -74,17 +77,19 @@ _select_branch() {
         # remove the remote from the branch name
         branches=(${branches[@]/$remote\//})
     fi
-    for (( i=0; i < ${#branches[@]}; i++ )); do
-        # attempt to find a master branch
-        if [[ "${branches[$i]}" == *"master" ]]; then
-            local master="${branches[$i]}"
-            unset branches[$i]
-            break # found one, stop looking
-        fi
-    done
-    if [[ ! -z $master ]]; then
+    # check if develop/master branch exists
+    # https://stackoverflow.com/a/28032613
+    local has_develop=$(printf "\n%s" "${branches[@]}" | grep -x "develop" | wc -l)
+    local has_master=$(printf "\n%s" "${branches[@]}" | grep -x "master" | wc -l)
+    # remove master and develop
+    branches=($(echo "${branches[@]}" | tr ' ' '\n' | grep -xv "develop" | grep -xv "master" | tr '\n' ' '))
+    if [ "$has_develop" -gt 0 ]; then
+        # ensure that develop branch is placed in front
+        branches=("develop" "${branches[@]}")
+    fi
+    if [ "$has_master" -gt 0 ]; then
         # ensure that master branch is placed in front
-        branches=("$master" "${branches[@]}")
+        branches=("master" "${branches[@]}")
     fi
     # Set the prompt string
     PS3="--> Switch branch [1-${#branches[@]}] or [q]? "
